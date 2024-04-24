@@ -30,7 +30,7 @@ const AgentDashboard = () => {
         const ccpContainer = document.getElementById('ccp-container');
         if (!ccpContainer.firstChild) { // Ensure the CCP is initialized only if there's no iframe already
             window.connect.core.initCCP(ccpContainer, {
-                ccpUrl: 'https://ss2cc.my.connect.aws/connect/ccp-v2/', // 'https://ss2cc.awsapps.com/connect/ccp-v2/', // 'https://ss2cc.my.connect.aws', // 'https://ss2cc.awsapps.com/connect/ccp-v2/',
+                ccpUrl: 'https://ss2cc.my.connect.aws/connect/ccp-v2/',
                 loginPopup: true,
                 region: 'us-east-1',
                 softphone: {
@@ -39,9 +39,9 @@ const AgentDashboard = () => {
             });
         }
 
-        const subscription = window.connect.agent(agent => {
+        const agentUpdateHandler = (agent) => {
             console.log('Agent updated:', agent.getName(), agent.getStatus().name);
-            
+
             const newAgent = {
                 name: agent.getName(),
                 status: agent.getStatus().name
@@ -57,10 +57,18 @@ const AgentDashboard = () => {
                     return [...prevAgents, newAgent];
                 }
             });
+        };
+
+        const subscription = window.connect.agent(agent => {
+            // Subscribe to state changes using the onStateChange method
+            agent.onStateChange(agentStateChange => {
+                console.log(`State change detected. Old State: ${agentStateChange.oldState}, New State: ${agentStateChange.newState}`);
+                agentUpdateHandler(agentStateChange.agent);
+            });
         });
 
         return () => {
-            subscription.unsubscribe();
+            subscription.unsubscribe(); // Clean up the subscription when the component unmounts
         };
     }, []);
 
