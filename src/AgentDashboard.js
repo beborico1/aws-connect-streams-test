@@ -30,8 +30,8 @@ const AgentDashboard = () => {
         const ccpContainer = document.getElementById('ccp-container');
         if (!ccpContainer.firstChild) { // Ensure the CCP is initialized only if there's no iframe already
             window.connect.core.initCCP(ccpContainer, {
-                ccpUrl: 'https://ss2cc.my.connect.aws/', // 'https://ss2cc.awsapps.com/connect/ccp-v2/',
-                loginPopup: true,
+                ccpUrl: 'https://ss2cc.awsapps.com/connect/ccp-v2/', // 'https://ss2cc.my.connect.aws/', // 'https://ss2cc.awsapps.com/connect/ccp-v2/',
+                loginPopup: false,
                 region: 'us-east-1',
                 softphone: {
                     allowFramedSoftphone: true
@@ -40,6 +40,8 @@ const AgentDashboard = () => {
         }
 
         const subscription = window.connect.agent(agent => {
+            console.log('Agent updated:', agent.getName(), agent.getStatus().name);
+            
             const newAgent = {
                 name: agent.getName(),
                 status: agent.getStatus().name
