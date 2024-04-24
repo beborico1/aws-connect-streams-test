@@ -30,8 +30,8 @@ const AgentDashboard = () => {
         const ccpContainer = document.getElementById('ccp-container');
         if (!ccpContainer.firstChild) { // Ensure the CCP is initialized only if there's no iframe already
             window.connect.core.initCCP(ccpContainer, {
-                ccpUrl: 'https://ss2cc.awsapps.com/connect/ccp-v2/', // 'https://ss2cc.my.connect.aws/', // 'https://ss2cc.awsapps.com/connect/ccp-v2/',
-                loginPopup: false,
+                ccpUrl: 'https://ss2cc.my.connect.aws/connect/ccp-v2/', // 'https://ss2cc.awsapps.com/connect/ccp-v2/', // 'https://ss2cc.my.connect.aws', // 'https://ss2cc.awsapps.com/connect/ccp-v2/',
+                loginPopup: true,
                 region: 'us-east-1',
                 softphone: {
                     allowFramedSoftphone: true
