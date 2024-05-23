@@ -79,7 +79,11 @@ const AgentDashboard = () => {
     const changeAgentState = (agentName, targetState) => {
         const agent = window.connect.agent();
         const states = agent.getAgentStates();
-        const desiredState = states.find(state => state.name === targetState);
+
+        // states [0] offline, [1] available, [2] aftercallwork
+
+        console.log('States:', states);
+        return
 
         if (desiredState) {
             agent.setState(desiredState, {
