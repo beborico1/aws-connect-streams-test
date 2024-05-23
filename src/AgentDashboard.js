@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import 'amazon-connect-streams';
 
-// Componente que muestra la tabla de agentes
-const AgentTable = ({ agents }) => {
+const AgentTable = ({ agents, changeAgentState }) => {
     return (
         <table>
             <thead>
                 <tr>
                     <th>Nombre</th>
                     <th>Estado</th>
+                    <th>Acción</th>
                 </tr>
             </thead>
             <tbody>
@@ -16,6 +16,13 @@ const AgentTable = ({ agents }) => {
                     <tr key={agent.name}>
                         <td>{agent.name}</td>
                         <td>{agent.status}</td>
+                        <td>
+                            {agent.status === 'Available' ? (
+                                <button onClick={() => changeAgentState(agent.name, 'Offline')}>Go Offline</button>
+                            ) : (
+                                <button onClick={() => changeAgentState(agent.name, 'Available')}>Go Available</button>
+                            )}
+                        </td>
                     </tr>
                 ))}
             </tbody>
@@ -28,7 +35,7 @@ const AgentDashboard = () => {
 
     useEffect(() => {
         const ccpContainer = document.getElementById('ccp-container');
-        if (!ccpContainer.firstChild) { // Ensure the CCP is initialized only if there's no iframe already
+        if (!ccpContainer.firstChild) {
             window.connect.core.initCCP(ccpContainer, {
                 ccpUrl: 'https://ss2cc.my.connect.aws/connect/ccp-v2/',
                 loginPopup: true,
@@ -50,17 +57,14 @@ const AgentDashboard = () => {
             setAgents(prevAgents => {
                 const index = prevAgents.findIndex(a => a.name === newAgent.name);
                 if (index > -1) {
-                    // Actualizar el estado del agente existente
                     return prevAgents.map((item, idx) => idx === index ? newAgent : item);
                 } else {
-                    // Agregar un nuevo agente si no estaba previamente en la lista
                     return [...prevAgents, newAgent];
                 }
             });
         };
 
         const subscription = window.connect.agent(agent => {
-            // Subscribe to state changes using the onStateChange method
             agent.onStateChange(agentStateChange => {
                 console.log(`State change detected. Old State: ${agentStateChange.oldState}, New State: ${agentStateChange.newState}`);
                 agentUpdateHandler(agentStateChange.agent);
@@ -68,14 +72,31 @@ const AgentDashboard = () => {
         });
 
         return () => {
-            subscription.unsubscribe(); // Clean up the subscription when the component unmounts
+            subscription.unsubscribe();
         };
     }, []);
+
+    const changeAgentState = (agentName, targetState) => {
+        const agent = window.connect.agent();
+        const states = agent.getAgentStates();
+        const desiredState = states.find(state => state.name === targetState);
+
+        if (desiredState) {
+            agent.setState(desiredState, {
+                success: () => {
+                    console.log(`State changed to ${desiredState.name}`);
+                },
+                failure: (err) => {
+                    console.error('Failed to change state:', err);
+                }
+            }, { enqueueNextState: false });
+        }
+    };
 
     return (
         <div>
             <div id="ccp-container" style={{ display: 'none' }}></div>
-            <AgentTable agents={agents} />
+            <AgentTable agents={agents} changeAgentState={changeAgentState} />
         </div>
     );
 };
