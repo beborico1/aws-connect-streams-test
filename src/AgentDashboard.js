@@ -32,6 +32,8 @@ const AgentTable = ({ agents, changeAgentState }) => {
 
 const AgentDashboard = () => {
     const [agents, setAgents] = useState([]);
+    const [incomingContact, setIncomingContact] = useState(null);
+    const [currentConnection, setCurrentConnection] = useState(null);
 
     useEffect(() => {
         const ccpContainer = document.getElementById('ccp-container');
@@ -64,6 +66,44 @@ const AgentDashboard = () => {
             });
         };
 
+        const contactSubscription = window.connect.contact(contact => {
+            console.log('Contact:', contact);
+            setIncomingContact(contact);
+
+            contact.onIncoming(function (contact) {
+                console.log('Incoming contact:', contact);
+            });
+            contact.onConnecting(function (contact) {
+                console.log('Incoming contact connecting:', contact);
+            }
+            );
+            contact.onAccepted(function (contact) {
+                console.log('Incoming contact accepted:', contact);
+            }
+            );
+            contact.onConnected(function (contact) {
+                console.log('Incoming contact connected:', contact);
+            }
+            );
+            contact.onEnded(function (contact) {
+                console.log('Incoming contact ended:', contact);
+            }
+            );
+        });
+
+        // const connectionSubscription = window.connect.connection(connection => {
+        //     console.log('Connection detected:',
+        //         connection.getContactId(),
+        //         connection.getEndpoint().phoneNumber,
+        //         connection.getType(),
+        //         connection.getStatus().name
+        //     );
+
+        //     setCurrentConnection(connection);
+        // });
+
+        console.log("WINDOWCONNECT", window.connect)
+
         const subscription = window.connect.agent(agent => {
             agent.onStateChange(agentStateChange => {
                 console.log(`State change detected. Old State: ${agentStateChange.oldState}, New State: ${agentStateChange.newState}`);
@@ -72,7 +112,9 @@ const AgentDashboard = () => {
         });
 
         return () => {
+            // connectionSubscription.unsubscribe();
             subscription.unsubscribe();
+            contactSubscription.unsubscribe();
         };
     }, []);
 
@@ -101,8 +143,36 @@ const AgentDashboard = () => {
     return (
         <div>
             <div id="ccp-container" style={{ display: 'none' }}></div>
+            {incomingContact && <div>
+                <h3>Incoming Contact</h3>
+                <p>Contact ID: {incomingContact.getContactId()}</p>
+                <button onClick={() => incomingContact.accept({
+                    success: () => console.log('Contact accepted'),
+                    failure: (err) => console.error('Failed to accept contact:', err)
+                })}>Accept</button>
+                <button onClick={() => {
+                    console.log("1 CONTACT", incomingContact.getAgentConnection().destroy())
+                }
+                }>Get Connection</button>
+            </div>}
+
+            {/* <button onClick={() => window.connect.Connection.destroy()}>Destroy Connection</button>
+ */}
+
+            {/* <button
+                onClick={() => {
+                    window.connect.contact.accept({
+                        success: () => console.log('Contact accepted'),
+                        failure: (err) => console.error('Failed to accept contact:', err)
+                    })
+                }
+                }>
+                Accept
+            </button> */}
+
+
             <AgentTable agents={agents} changeAgentState={changeAgentState} />
-        </div>
+        </div >
     );
 };
 
