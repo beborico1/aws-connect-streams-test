@@ -77,24 +77,25 @@ const AgentDashboard = () => {
     }, []);
 
     const changeAgentState = (agentName, targetState) => {
-        const agent = window.connect.agent();
-        const states = agent.getAgentStates();
+        // Usamos la función callback para obtener la referencia del agente
+        window.connect.agent(agent => {
+            console.log('Agent:', agent);
 
-        // states [0] offline, [1] available, [2] aftercallwork
+            const states = agent.getAgentStates();
+            console.log('States:', states);
 
-        console.log('States:', states);
-        return
-
-        if (desiredState) {
-            agent.setState(desiredState, {
-                success: () => {
-                    console.log(`State changed to ${desiredState.name}`);
-                },
-                failure: (err) => {
-                    console.error('Failed to change state:', err);
-                }
-            }, { enqueueNextState: false });
-        }
+            const desiredState = states.find(state => state.name === targetState);
+            if (desiredState) {
+                agent.setState(desiredState, {
+                    success: () => {
+                        console.log(`State changed to ${desiredState.name}`);
+                    },
+                    failure: (err) => {
+                        console.error('Failed to change state:', err);
+                    }
+                }, { enqueueNextState: false });
+            }
+        });
     };
 
     return (
